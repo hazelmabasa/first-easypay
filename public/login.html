@@ -1,0 +1,125 @@
+<!-- EasyPay Login -->
+<!-- Form to enter phone, email, and PIN -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-100 to-blue-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+    <h2 class="text-2xl font-semibold text-center text-blue-700 mb-6">Login to EasyPay</h2>
+
+    <div class="space-y-4">
+      <input id="phone" type="text" placeholder="Phone Number"
+        class="w-full p-2 border rounded text-sm" maxlength="15" />
+
+      <input id="email" type="email" placeholder="Email"
+        class="w-full p-2 border rounded text-sm" />
+
+      <div class="relative">
+        <input id="pin" type="password" maxlength="4" placeholder="Optional 4-digit PIN"
+          class="w-full p-2 border rounded text-sm tracking-widest pr-10" />
+        <button type="button" id="toggle-pin" class="absolute right-2 top-2 text-xs text-gray-500">Show</button>
+      </div>
+
+      <button id="login-btn" onclick="login()"
+        class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 flex items-center justify-center gap-2">
+        <span id="login-btn-text">Login</span>
+        <svg id="login-loading" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+      </button>
+    </div>
+
+    <div id="error" class="text-red-500 text-sm mt-3 hidden text-center">Login failed. Check your details.</div>
+    <!-- Success Modal -->
+    <div id="login-success-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full text-center">
+        <h3 class="text-xl font-bold text-green-700 mb-2">Welcome back!</h3>
+        <p class="mb-4">Login successful.<br>Redirecting to your wallet...</p>
+        <button onclick="closeLoginModal()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Go now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const api = 'http://localhost:3000';
+
+    function showLoginLoading(loading) {
+      document.getElementById('login-btn').disabled = loading;
+      document.getElementById('login-loading').classList.toggle('hidden', !loading);
+      document.getElementById('login-btn-text').textContent = loading ? 'Logging in...' : 'Login';
+    }
+
+    function validateEmail(email) {
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    }
+
+    function validatePhone(phone) {
+      return /^\+?\d{7,15}$/.test(phone);
+    }
+
+    function login() {
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const pin = document.getElementById("pin").value.trim();
+      const errorDiv = document.getElementById("error");
+      errorDiv.classList.add("hidden");
+
+      if (!validatePhone(phone)) {
+        errorDiv.textContent = "Please enter a valid phone number (digits, may start with +).";
+        errorDiv.classList.remove("hidden");
+        return;
+      }
+      if (!validateEmail(email)) {
+        errorDiv.textContent = "Please enter a valid email address.";
+        errorDiv.classList.remove("hidden");
+        return;
+      }
+
+      showLoginLoading(true);
+      fetch(api + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        showLoginLoading(false);
+        if (data.success) {
+          localStorage.setItem("easypay-user", JSON.stringify(data.user));
+          if (pin.length === 4) localStorage.setItem("easypay-pin", pin);
+          localStorage.setItem("last-active", Date.now());
+          document.getElementById("login-success-modal").classList.remove("hidden");
+          setTimeout(() => { window.location.href = "wallet.html"; }, 2500);
+        } else {
+          errorDiv.textContent = "Login failed. Check your details.";
+          errorDiv.classList.remove("hidden");
+        }
+      })
+      .catch(() => {
+        showLoginLoading(false);
+        errorDiv.textContent = "Login failed. Please try again.";
+        errorDiv.classList.remove("hidden");
+      });
+    }
+
+    function closeLoginModal() {
+      window.location.href = "wallet.html";
+    }
+
+    document.getElementById('toggle-pin').addEventListener('click', function() {
+      const pinInput = document.getElementById('pin');
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        this.textContent = 'Hide';
+      } else {
+        pinInput.type = 'password';
+        this.textContent = 'Show';
+      }
+    });
+  </script>
+</body>
+</html>
+

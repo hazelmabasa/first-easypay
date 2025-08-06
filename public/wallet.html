@@ -1,0 +1,358 @@
+<!-- EasyPay Wallet -->
+<!-- Shows balances and chart -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wallet - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#1A2E46',
+            financegreen: '#2ECC71',
+            softteal: '#00BFA6',
+            pewter: '#C3CCD0',
+            surface: '#FFFFFF',
+            charcoal: '#2D2D2D',
+            mutedblue: '#5D6D7E',
+            softred: '#E74C3C',
+            amber: '#F39C12',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-pewter min-h-screen text-charcoal">
+  <header class="bg-navy shadow">
+    <nav class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="w-10 h-10 flex items-center justify-center rounded-full shadow border-2 border-softteal bg-gradient-to-br from-financegreen to-softteal text-white text-2xl font-black select-none" style="font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: -2px;">EP</span>
+        <span class="text-xl font-bold text-financegreen">EasyPay</span>
+      </div>
+      <div class="space-x-4">
+        <a href="wallet.html" class="text-financegreen font-semibold">Wallet</a>
+        <a href="history.html" class="text-mutedblue hover:text-financegreen">History</a>
+        <a href="send.html" class="text-mutedblue hover:text-financegreen">Send</a>
+        <a href="receive.html" class="text-mutedblue hover:text-financegreen">Receive</a>
+        <a href="login.html" id="login-link" class="text-mutedblue hover:text-financegreen">Login</a>
+        <a href="#" id="logout-link" class="text-mutedblue hover:text-softred hidden" onclick="logout()">Logout</a>
+        <button id="dark-toggle" class="ml-2 px-2 py-1 rounded text-xs bg-pewter hover:bg-navy text-mutedblue">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-md mx-auto mt-10 p-1 rounded-[2rem] bg-pewter/80 shadow-2xl hover:scale-[1.015] transition-transform duration-300 backdrop-blur-md group">
+    <div class="rounded-[1.7rem] bg-surface p-6 space-y-8">
+    <!-- Phone section removed -->
+    <section class="mb-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-lg font-bold text-financegreen tracking-tight">Quick Send</span>
+        <span class="text-xs text-mutedblue">(fast transfer)</span>
+      </div>
+      <form id="quick-send-form" class="flex gap-2 items-center bg-pewter/40 rounded-xl p-2 shadow hover:shadow-lg transition">
+        <input id="quick-send-phone" type="text" placeholder="Recipient phone" class="p-2 border border-softteal rounded-lg text-sm w-32 focus:ring-2 focus:ring-softteal focus:border-softteal transition-all duration-150 outline-none hover:border-softteal bg-surface text-charcoal placeholder:text-mutedblue" maxlength="15" />
+        <input id="quick-send-amount" type="number" min="1" step="any" placeholder="Amount" class="p-2 border border-softteal rounded-lg text-sm w-20 focus:ring-2 focus:ring-softteal focus:border-softteal transition-all duration-150 outline-none hover:border-softteal bg-surface text-charcoal placeholder:text-mutedblue" />
+        <select id="quick-send-asset" class="p-2 border border-softteal rounded-lg text-sm focus:ring-2 focus:ring-softteal focus:border-softteal transition-all duration-150 outline-none hover:border-softteal bg-surface text-charcoal">
+          <option value="ZAR">ZAR</option>
+          <option value="USD">USD</option>
+          <option value="XRP">XRP</option>
+          <option value="XLM">XLM</option>
+          <option value="BTC">BTC</option>
+        </select>
+        <button type="submit" class="bg-gradient-to-r from-financegreen to-softteal hover:from-softteal hover:to-financegreen text-white px-3 py-1 rounded-xl text-sm font-semibold shadow focus:outline-none focus:ring-2 focus:ring-softteal transition-all duration-150">Send</button>
+      </form>
+      <div id="quick-send-msg" class="text-xs text-center mt-1"></div>
+    </section>
+    <div class="my-4 border-t border-blue-100"></div>
+    <section class="flex flex-col items-center gap-2 mb-2">
+      <h2 class="text-2xl font-extrabold text-center text-navy drop-shadow">Welcome, <span id="user-name" class="text-softteal"></span>!</h2>
+      <div class="text-mutedblue text-sm tracking-wide">Your EasyPay Wallet</div>
+    </section>
+    <div class="my-4 border-t border-blue-100"></div>
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-lg font-bold text-navy tracking-tight">Balances</span>
+      <button id="refresh-btn" class="px-3 py-1 bg-softteal text-white rounded-lg hover:bg-financegreen text-sm font-semibold shadow">Refresh</button>
+    </div>
+    <!-- Example balances removed for clarity -->
+    <div class="flex flex-wrap items-center gap-2 mb-2">
+      <button id="export-balances" class="bg-amber text-white px-3 py-1 rounded hover:bg-financegreen text-xs shadow">Export CSV</button>
+      <button id="copy-all-balances" class="bg-softteal text-white px-3 py-1 rounded hover:bg-financegreen text-xs shadow">Copy All</button>
+      <label class="flex items-center gap-1 text-xs cursor-pointer">
+        <input type="checkbox" id="hide-zero" class="accent-softteal" checked /> Hide zero balances
+      </label>
+      <input id="asset-search" type="text" placeholder="Search asset..." class="border border-softteal rounded-lg px-2 py-1 text-xs ml-2 focus:ring-2 focus:ring-softteal focus:border-softteal transition-all duration-150 outline-none hover:border-softteal bg-surface text-charcoal placeholder:text-mutedblue" style="min-width:100px;" />
+      <select id="sort-balances" class="border border-softteal rounded-lg px-2 py-1 text-xs ml-2 focus:ring-2 focus:ring-softteal focus:border-softteal transition-all duration-150 outline-none hover:border-softteal bg-surface text-charcoal">
+        <option value="alpha">Sort: A-Z</option>
+        <option value="desc">Sort: High-Low</option>
+        <option value="asc">Sort: Low-High</option>
+      </select>
+    </div>
+    <ul id="balances" class="space-y-3 text-lg"></ul>
+    <div class="my-4 border-t border-navy/20"></div>
+    <div id="empty-anim" class="hidden flex flex-col items-center justify-center mt-10">
+      <svg width="120" height="120" fill="none" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="#C3CCD0"/><rect x="30" y="50" width="60" height="30" rx="8" fill="#2ECC71"/><rect x="40" y="60" width="40" height="10" rx="4" fill="#00BFA6"/></svg>
+      <div class="text-mutedblue mt-4 text-lg">No balances found</div>
+    </div>
+    <div class="relative mx-auto my-4" style="width:320px;height:180px;">
+      <canvas id="balance-chart" width="320" height="180"></canvas>
+      <div id="chart-spinner" class="absolute inset-0 flex items-center justify-center bg-pewter/80 z-10 hidden">
+        <svg class="animate-spin h-8 w-8 text-financegreen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+      </div>
+    </div>
+    <div id="total-balance" class="text-center text-financegreen font-bold text-lg mt-4"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    </div>
+  </main>
+
+  <script>
+    // Phone section removed
+
+    // Quick send feature
+    document.getElementById("quick-send-form").onsubmit = function(e) {
+      e.preventDefault();
+      const recipientPhone = document.getElementById("quick-send-phone").value.trim();
+      const amount = parseFloat(document.getElementById("quick-send-amount").value);
+      const asset = document.getElementById("quick-send-asset").value;
+      const msg = document.getElementById("quick-send-msg");
+      msg.textContent = "";
+      msg.className = "text-xs text-center mt-1";
+      if (!recipientPhone || isNaN(amount) || amount <= 0) {
+        msg.textContent = "Enter valid recipient and amount.";
+        msg.className = "text-red-500 text-xs text-center mt-1";
+        return;
+      }
+      fetch(`${api}/send-asset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senderPhone: user.phone, recipientPhone, asset, amount })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          msg.textContent = data.error;
+          msg.className = "text-red-500 text-xs text-center mt-1";
+        } else {
+          msg.textContent = `Sent ${amount} ${asset} to ${recipientPhone}`;
+          msg.className = "text-green-600 text-xs text-center mt-1";
+          renderBalances();
+        }
+      })
+      .catch(() => {
+        msg.textContent = "Send failed.";
+        msg.className = "text-red-500 text-xs text-center mt-1";
+      });
+    };
+
+    // Persistent dark mode
+    function setDarkMode(on) {
+      if (on) {
+        document.body.classList.add("bg-gray-900","text-gray-100");
+        document.body.classList.remove("bg-gradient-to-br","from-green-100","to-blue-100","text-gray-800");
+        document.querySelector("main").classList.add("bg-gray-800","text-gray-100");
+        document.querySelector("main").classList.remove("bg-white","text-gray-800");
+        document.querySelector("header").classList.add("bg-gray-900","text-gray-100");
+        document.querySelector("header").classList.remove("bg-white","text-gray-800");
+        document.getElementById("dark-toggle").textContent = "☀️";
+        localStorage.setItem("easypay-dark","1");
+      } else {
+        document.body.classList.remove("bg-gray-900","text-gray-100");
+        document.body.classList.add("bg-gradient-to-br","from-green-100","to-blue-100","text-gray-800");
+        document.querySelector("main").classList.remove("bg-gray-800","text-gray-100");
+        document.querySelector("main").classList.add("bg-white","text-gray-800");
+        document.querySelector("header").classList.remove("bg-gray-900","text-gray-100");
+        document.querySelector("header").classList.add("bg-white","text-gray-800");
+        document.getElementById("dark-toggle").textContent = "🌙";
+        localStorage.setItem("easypay-dark","0");
+      }
+    }
+    document.getElementById("dark-toggle").onclick = function() {
+      setDarkMode(!(localStorage.getItem("easypay-dark") === "1"));
+    };
+    // On load, set dark mode if needed
+    if (localStorage.getItem("easypay-dark") === "1") setDarkMode(true);
+    const api = 'http://localhost:3000';
+    const user = JSON.parse(localStorage.getItem("easypay-user"));
+    if (!user) location.href = "login.html";
+
+    document.getElementById("logout-link").classList.remove("hidden");
+    document.getElementById("login-link").classList.add("hidden");
+
+    // Show user name/email in greeting
+    document.getElementById("user-name").textContent = user.email || user.phone;
+
+    function logout() {
+      localStorage.clear();
+      location.href = "login.html";
+    }
+
+    // SVG icons for currencies
+    const assetIcons = {
+      ZAR: `<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#fff"/><rect x="2" y="2" width="24" height="24" rx="4" fill="#009739"/><path d="M2 14h24" stroke="#fff" stroke-width="2"/><path d="M2 7h24" stroke="#fff" stroke-width="2"/><path d="M2 21h24" stroke="#fff" stroke-width="2"/></svg>`,
+      USD: `<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#fff"/><circle cx="14" cy="14" r="12" fill="#3C3B6E"/><path d="M7 14h14" stroke="#fff" stroke-width="2"/><path d="M14 7v14" stroke="#fff" stroke-width="2"/></svg>`,
+      EUR: `<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#fff"/><circle cx="14" cy="14" r="12" fill="#003399"/><path d="M9 14h10" stroke="#FFD700" stroke-width="2"/><path d="M11 10h6" stroke="#FFD700" stroke-width="2"/><path d="M11 18h6" stroke="#FFD700" stroke-width="2"/></svg>`,
+      XRP: `<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#fff"/><circle cx="14" cy="14" r="12" fill="#23292F"/><path d="M8 8l6 6 6-6" stroke="#fff" stroke-width="2" fill="none"/><path d="M8 20l6-6 6 6" stroke="#fff" stroke-width="2" fill="none"/></svg>`,
+      XLM: `<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#fff"/><circle cx="14" cy="14" r="12" fill="#14B8A6"/><path d="M8 14l6-6 6 6-6 6z" fill="#fff"/></svg>`,
+      BTC: `<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#fff"/><circle cx="14" cy="14" r="12" fill="#F7931A"/><text x="14" y="19" text-anchor="middle" font-size="14" fill="#fff" font-family="Arial, sans-serif">₿</text></svg>`
+    };
+
+    // Chart.js instance
+    let chartInstance = null;
+    // Fetch and render balances
+    // let lastBalancesData = {}; // removed duplicate declaration
+    function animateCount(el, to) {
+      let start = 0;
+      let duration = 700;
+      let startTime = null;
+      function step(ts) {
+        if (!startTime) startTime = ts;
+        let progress = Math.min((ts - startTime) / duration, 1);
+        el.textContent = (to * progress).toLocaleString(undefined, {maximumFractionDigits:2});
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = to;
+      }
+      requestAnimationFrame(step);
+    }
+    let lastBalancesData = {};
+    let lastUpdateTime = null;
+    function renderBalances() {
+      document.getElementById('chart-spinner').classList.remove('hidden');
+      fetch(`${api}/balance/${user.phone}`)
+        .then(r => r.json())
+        .then(data => {
+          lastBalancesData = data;
+          lastUpdateTime = new Date();
+          const balances = document.getElementById("balances");
+          const emptyAnim = document.getElementById("empty-anim");
+          const hideZero = document.getElementById("hide-zero").checked;
+          const assetSearch = document.getElementById("asset-search").value.trim().toLowerCase();
+          const sortType = document.getElementById("sort-balances").value;
+          let total = 0;
+          const rates = { ZAR: 1, USD: 18, EUR: 20, XRP: 10, XLM: 5, BTC: 1000000 };
+          let filtered = Object.keys(data).filter(asset => (!hideZero || data[asset] > 0) && (!assetSearch || asset.toLowerCase().includes(assetSearch)));
+          // Sorting
+          filtered.sort((a, b) => {
+            if (sortType === 'alpha') return a.localeCompare(b);
+            if (sortType === 'desc') return data[b] - data[a];
+            if (sortType === 'asc') return data[a] - data[b];
+            return 0;
+          });
+          if (filtered.length === 0) {
+            balances.innerHTML = '';
+            document.getElementById("total-balance").textContent = '';
+            emptyAnim.classList.remove('hidden');
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+            document.getElementById('chart-spinner').classList.add('hidden');
+            return;
+          } else {
+            emptyAnim.classList.add('hidden');
+          }
+          balances.innerHTML = filtered.map(asset => {
+            let value = data[asset];
+            let zarValue = value * (rates[asset] || 1);
+            total += zarValue;
+            return `
+              <li class="bg-white bg-opacity-80 hover:bg-blue-50 transition p-4 rounded-2xl shadow-lg flex justify-between items-center border border-blue-100 group" title="~R${zarValue.toLocaleString(undefined, {maximumFractionDigits:2})} | Updated: ${lastUpdateTime.toLocaleTimeString()}">
+                <span class="flex items-center gap-3">
+                  <span class="w-8 h-8 flex items-center justify-center">${assetIcons[asset] || '<svg width=\'28\' height=\'28\'><circle cx=\'14\' cy=\'14\' r=\'12\' fill=\'#e5e7eb\'/></svg>'}</span>
+                  <span class="font-semibold text-blue-700">${asset}</span>
+                </span>
+                <span class="flex flex-col items-end">
+                  <strong class="text-lg countup" data-value="${value}">0</strong>
+                  <span class="text-xs text-gray-400">~R${zarValue.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+                  <button class="copy-balance-btn text-xs text-blue-500 hover:underline mt-1" data-asset="${asset}">Copy</button>
+                </span>
+              </li>
+            `;
+          }).join('');
+          document.getElementById("total-balance").textContent = `Total (ZAR): R${total.toLocaleString(undefined, {maximumFractionDigits:2})}`;
+          // Animate count up
+          Array.from(document.querySelectorAll('.countup')).forEach(el => {
+            animateCount(el, Number(el.getAttribute('data-value')));
+          });
+          // Chart
+          const chartData = filtered.map(asset => data[asset]);
+          const chartLabels = filtered;
+          const chartColors = ['#2563eb','#22c55e','#f59e42','#eab308','#a21caf','#f43f5e'];
+          const ctx = document.getElementById('balance-chart').getContext('2d');
+          if (chartInstance) chartInstance.destroy();
+          chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: chartLabels,
+              datasets: [{
+                data: chartData,
+                backgroundColor: chartColors,
+                borderWidth: 2
+              }]
+            },
+            options: {
+              plugins: {
+                legend: { display: true, position: 'bottom' }
+              }
+            }
+          });
+          document.getElementById('chart-spinner').classList.add('hidden');
+          // Per-asset copy
+          Array.from(document.querySelectorAll('.copy-balance-btn')).forEach(btn => {
+            btn.onclick = function(e) {
+              e.stopPropagation();
+              const asset = this.getAttribute('data-asset');
+              const value = lastBalancesData[asset];
+              navigator.clipboard.writeText(`${asset}: ${value}`);
+              this.textContent = "Copied!";
+              setTimeout(() => { this.textContent = "Copy"; }, 1200);
+            };
+          });
+        });
+      } // <-- Add this closing brace to end renderBalances function
+
+    // Sorting
+    document.getElementById("sort-balances").addEventListener('change', renderBalances);
+    // Asset search filter
+    document.getElementById("asset-search").addEventListener('input', renderBalances);
+    // Copy all balances to clipboard
+    document.getElementById("copy-all-balances").onclick = function() {
+      fetch(`${api}/balance/${user.phone}`)
+        .then(r => r.json())
+        .then(data => {
+          const lines = Object.entries(data).map(([asset, value]) => `${asset}: ${value}`);
+          navigator.clipboard.writeText(lines.join('\n'));
+          this.textContent = "Copied!";
+          setTimeout(() => { this.textContent = "Copy All"; }, 1200);
+        });
+    };
+
+    renderBalances();
+    document.getElementById("refresh-btn").addEventListener('click', renderBalances);
+    document.getElementById("hide-zero").addEventListener('change', renderBalances);
+    // Export balances to CSV
+    document.getElementById("export-balances").onclick = function() {
+      fetch(`${api}/balance/${user.phone}`)
+        .then(r => r.json())
+        .then(data => {
+          const rows = [['Asset','Amount']].concat(Object.entries(data));
+          const csv = rows.map(r => r.map(x => '"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+          const blob = new Blob([csv], {type: 'text/csv'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'easypay-balances.csv';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+    };
+  </script>
+</body>
+</html>
+
+
+

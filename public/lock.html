@@ -1,0 +1,67 @@
+<!-- EasyPay Lock -->
+<!-- PIN lock screen -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Unlock - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-100 to-blue-100 h-screen flex items-center justify-center">
+  <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs text-center">
+    <h2 class="text-2xl font-bold text-blue-700 mb-2">Unlock EasyPay</h2>
+    <p class="text-sm text-gray-500 mb-4">Enter your 4-digit PIN or use biometrics</p>
+
+    <input id="pin" type="password" maxlength="4"
+      class="w-full p-2 border rounded text-center tracking-widest text-xl mb-3"
+      placeholder="••••" onkeyup="if(event.key === 'Enter') unlock()" />
+
+    <button onclick="unlock()"
+      class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mb-2">Unlock</button>
+
+    <button onclick="mockBiometric()"
+      class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 mb-2">Use FaceID/Fingerprint</button>
+
+    <a href="#" onclick="resetPIN()" class="text-sm text-red-500 hover:underline">Forgot PIN?</a>
+
+    <div id="error" class="text-red-500 text-sm mt-3 hidden">Incorrect PIN</div>
+  </div>
+
+  <script>
+    const storedPin = localStorage.getItem("easypay-pin");
+    const lastActive = parseInt(localStorage.getItem("last-active") || "0");
+
+    // Optional: enforce re-login if >15min inactive
+    if (Date.now() - lastActive > 15 * 60 * 1000) {
+      localStorage.removeItem("easypay-user");
+      localStorage.removeItem("easypay-pin");
+      localStorage.removeItem("last-active");
+      window.location.href = "login.html";
+    }
+
+    function unlock() {
+      const entered = document.getElementById("pin").value;
+      if (entered === storedPin) {
+        localStorage.setItem("last-active", Date.now());
+        window.location.href = "wallet.html";
+      } else {
+        document.getElementById("error").classList.remove("hidden");
+      }
+    }
+
+    function resetPIN() {
+      localStorage.removeItem("easypay-user");
+      localStorage.removeItem("easypay-pin");
+      localStorage.removeItem("last-active");
+      window.location.href = "login.html";
+    }
+
+    function mockBiometric() {
+      localStorage.setItem("last-active", Date.now());
+      window.location.href = "wallet.html";
+    }
+  </script>
+</body>
+</html>

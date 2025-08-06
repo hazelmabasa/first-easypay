@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Receive - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#1A2E46',
+            financegreen: '#2ECC71',
+            softteal: '#00BFA6',
+            pewter: '#C3CCD0',
+            surface: '#FFFFFF',
+            charcoal: '#2D2D2D',
+            mutedblue: '#5D6D7E',
+            softred: '#E74C3C',
+            amber: '#F39C12',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-pewter min-h-screen text-charcoal">
+  <header class="bg-navy shadow">
+    <nav class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="w-10 h-10 flex items-center justify-center rounded-full shadow border-2 border-softteal bg-gradient-to-br from-financegreen to-softteal text-white text-2xl font-black select-none" style="font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: -2px;">EP</span>
+        <span class="text-xl font-bold text-financegreen">EasyPay</span>
+      </div>
+      <div class="space-x-4">
+        <a href="wallet.html" class="text-mutedblue hover:text-financegreen">Wallet</a>
+        <a href="history.html" class="text-mutedblue hover:text-financegreen">History</a>
+        <a href="send.html" class="text-mutedblue hover:text-financegreen">Send</a>
+        <a href="receive.html" class="text-financegreen font-semibold">Receive</a>
+        <a href="login.html" id="login-link" class="text-mutedblue hover:text-financegreen">Login</a>
+        <a href="#" id="logout-link" class="text-mutedblue hover:text-softred hidden" onclick="logout()">Logout</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-md mx-auto mt-10 p-1 rounded-[2rem] bg-pewter/80 shadow-2xl hover:scale-[1.015] transition-transform duration-300 backdrop-blur-md group">
+    <div class="rounded-[1.7rem] bg-surface p-6 space-y-8">
+    <div class="flex flex-col items-center gap-2 mb-2">
+      <span class="w-16 h-16 flex items-center justify-center rounded-full shadow border-2 border-softteal bg-gradient-to-br from-financegreen to-softteal text-white text-3xl font-black select-none mb-1" style="font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: -2px;">EP</span>
+      <h2 class="text-2xl font-semibold text-navy">Receive Payment</h2>
+      <div class="text-mutedblue text-sm">Share your phone number to receive funds</div>
+    </div>
+    <div class="my-4 border-t border-navy/20"></div>
+    <div class="flex flex-col items-center gap-2 mt-4">
+      <div class="flex items-center gap-2 animate-fade-in">
+        <div id="phone-display" class="text-2xl font-bold text-navy tracking-wider bg-pewter px-4 py-2 rounded-lg border border-softteal">scan</div>
+        <button id="copy-phone" class="text-xs px-3 py-1 bg-softteal text-white rounded hover:bg-financegreen shadow">Copy</button>
+      </div>
+      <div id="copy-msg" class="text-xs text-financegreen mt-1" style="display:none;">Copied!</div>
+      <div class="mt-4 flex flex-col items-center">
+        <img id="qr-code-img" class="mx-auto rounded-lg border border-softteal bg-surface p-2 shadow" alt="QR code for phone" />
+        <div class="text-xs text-mutedblue mt-1">Scan</div>
+      </div>
+    </div>
+    <div class="my-4 border-t border-navy/20"></div>
+    <div class="mt-8">
+      <label class="block text-sm font-medium mb-1 text-navy tracking-wide">Supported Currencies</label>
+      <ul class="bg-pewter/40 p-4 rounded-2xl shadow-lg border border-softteal space-y-2 text-left">
+        <li class="flex items-center gap-3 p-3 rounded-xl transition hover:bg-softteal/10 hover:scale-[1.025] focus-within:scale-[1.025]">
+          <span class="text-2xl text-yellow-400 drop-shadow">⭐</span>
+          <span class="font-semibold text-navy">XLM</span>
+          <span class="text-xs text-mutedblue ml-2">(Stellar Lumens)</span>
+        </li>
+        <li class="flex items-center gap-3 p-3 rounded-xl transition hover:bg-softteal/10 hover:scale-[1.025] focus-within:scale-[1.025]">
+          <span class="text-2xl text-gray-500 drop-shadow">🪙</span>
+          <span class="font-semibold text-navy">XRP</span>
+        </li>
+        <li class="flex items-center gap-3 p-3 rounded-xl transition hover:bg-financegreen/10 hover:scale-[1.025] focus-within:scale-[1.025]">
+          <span class="text-2xl">🇿🇦</span>
+          <span class="font-semibold text-financegreen">ZAR</span>
+        </li>
+        <li class="flex items-center gap-3 p-3 rounded-xl transition hover:bg-softteal/10 hover:scale-[1.025] focus-within:scale-[1.025]">
+          <span class="text-2xl">🇺🇸</span>
+          <span class="font-semibold text-navy">USD</span>
+        </li>
+        <li class="flex items-center gap-3 p-3 rounded-xl transition hover:bg-amber/10 hover:scale-[1.025] focus-within:scale-[1.025]">
+          <span class="text-2xl text-yellow-600 drop-shadow">₿</span>
+          <span class="font-semibold text-amber">BTC</span>
+        </li>
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: none; }
+    }
+    .animate-fade-in { animation: fade-in 0.7s cubic-bezier(.4,0,.2,1) both; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    // Copy phone to clipboard
+    document.getElementById("copy-phone").onclick = function() {
+      navigator.clipboard.writeText(user.phone);
+      document.getElementById("copy-msg").style.display = "block";
+      setTimeout(() => { document.getElementById("copy-msg").style.display = "none"; }, 1200);
+    };
+    const user = JSON.parse(localStorage.getItem("easypay-user"));
+    if (!user) location.href = "login.html";
+
+    document.getElementById("phone-display").textContent = user.phone;
+    document.getElementById("logout-link").classList.remove("hidden");
+    document.getElementById("login-link").classList.add("hidden");
+
+    // Generate QR code as image
+    const qr = new QRious({
+      value: user.phone,
+      size: 120,
+      background: 'white',
+      foreground: '#2563eb',
+      level: 'H'
+    });
+    document.getElementById('qr-code-img').src = qr.toDataURL();
+
+    function logout() {
+      localStorage.clear();
+      location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
+
+
+
+

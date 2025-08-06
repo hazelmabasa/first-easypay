@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Transaction History - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#1A2E46',
+            financegreen: '#2ECC71',
+            softteal: '#00BFA6',
+            pewter: '#C3CCD0',
+            surface: '#FFFFFF',
+            charcoal: '#2D2D2D',
+            mutedblue: '#5D6D7E',
+            softred: '#E74C3C',
+            amber: '#F39C12',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-pewter min-h-screen text-charcoal">
+  <header class="bg-navy shadow">
+    <nav class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="w-10 h-10 flex items-center justify-center rounded-full shadow border-2 border-softteal bg-gradient-to-br from-financegreen to-softteal text-white text-2xl font-black select-none" style="font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: -2px;">EP</span>
+        <span class="text-xl font-bold text-financegreen">EasyPay</span>
+      </div>
+      <div class="space-x-4">
+        <a href="wallet.html" class="text-mutedblue hover:text-financegreen">Wallet</a>
+        <a href="history.html" class="text-financegreen font-semibold">History</a>
+        <a href="send.html" class="text-mutedblue hover:text-financegreen">Send</a>
+        <a href="receive.html" class="text-mutedblue hover:text-financegreen">Receive</a>
+        <a href="login.html" id="login-link" class="text-mutedblue hover:text-financegreen">Login</a>
+        <a href="#" id="logout-link" class="text-mutedblue hover:text-softred hidden" onclick="logout()">Logout</a>
+      </div>
+    </nav>
+  </header>
+
+
+  <main class="max-w-2xl mx-auto mt-10 p-1 rounded-[2rem] bg-pewter/80 shadow-2xl hover:scale-[1.015] transition-transform duration-300 backdrop-blur-md group">
+    <div class="rounded-[1.7rem] bg-surface p-6 space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+      <h2 class="text-2xl font-extrabold text-center mb-2 md:mb-0 text-navy tracking-wide drop-shadow">Transaction History</h2>
+      <div class="flex flex-col md:flex-row md:items-center gap-2 bg-pewter/40 p-3 rounded-2xl shadow border border-navy/20">
+        <input id="search" type="text" placeholder="Search by phone or asset..." class="border border-softteal p-2 rounded-xl text-sm focus:ring-2 focus:ring-softteal focus:border-softteal transition bg-surface text-charcoal placeholder:text-mutedblue" />
+        <select id="filter-asset" class="border border-softteal p-2 rounded-xl text-sm focus:ring-2 focus:ring-softteal focus:border-softteal transition bg-surface text-charcoal">
+          <option value="">All Assets</option>
+          <option value="ZAR">ZAR</option>
+          <option value="USD">USD</option>
+          <option value="XLM">XLM</option>
+          <option value="XRP">XRP</option>
+          <option value="BTC">BTC</option>
+        </select>
+        <select id="filter-type" class="border border-softteal p-2 rounded-xl text-sm focus:ring-2 focus:ring-softteal focus:border-softteal transition bg-surface text-charcoal">
+          <option value="">All Types</option>
+          <option value="send">Sent</option>
+          <option value="receive">Received</option>
+        </select>
+        <button id="sort-btn" class="bg-gradient-to-r from-financegreen to-softteal hover:from-softteal hover:to-financegreen text-white px-3 py-1 rounded-xl text-sm font-semibold shadow focus:outline-none focus:ring-2 focus:ring-softteal transition-all duration-150">Sort: Newest</button>
+
+      </div>
+    </div>
+    <div class="my-4 border-t border-navy/20"></div>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+      <div id="summary" class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"></div>
+      <button id="dark-toggle" class="ml-auto px-2 py-1 rounded text-xs bg-pewter hover:bg-navy text-mutedblue">🌙</button>
+    </div>
+    <div id="asset-totals" class="flex flex-wrap gap-2 mb-2"></div>
+    <div class="my-4 border-t border-blue-100"></div>
+    <div class="flex items-center gap-2 mb-2">
+      <label for="page-size" class="text-sm text-gray-500">Page size:</label>
+      <select id="page-size" class="border border-blue-100 rounded px-2 py-1 text-sm">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+      <button id="prev-page" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded shadow text-sm">Prev</button>
+      <span id="page-info" class="text-sm text-gray-500"></span>
+      <button id="next-page" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded shadow text-sm">Next</button>
+    </div>
+    <div id="history" class="space-y-4"></div>
+    <div class="my-4 border-t border-blue-100"></div>
+    <div id="undo-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-amber/20 border border-amber rounded-xl px-6 py-3 shadow-lg flex items-center gap-4 z-50 hidden">
+      <span>Transaction deleted.</span>
+      <button id="undo-btn" class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded shadow">Undo</button>
+    </div>
+    <!-- Animated empty state -->
+    <div id="empty-anim" class="hidden flex flex-col items-center justify-center mt-10">
+      <svg width="120" height="120" fill="none" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="#C3CCD0"/><rect x="30" y="50" width="60" height="30" rx="8" fill="#2ECC71"/><rect x="40" y="60" width="40" height="10" rx="4" fill="#00BFA6"/></svg>
+      <div class="text-mutedblue mt-4 text-lg">No transactions found</div>
+    </div>
+    <div id="tx-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full relative">
+        <button id="close-modal" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+        <div id="modal-content"></div>
+      </div>
+    </div>
+    </div>
+  </main>
+
+  <script>
+    const api = 'http://localhost:3000';
+    const user = JSON.parse(localStorage.getItem("easypay-user"));
+    if (!user) location.href = "login.html";
+
+    document.getElementById("logout-link").classList.remove("hidden");
+    document.getElementById("login-link").classList.add("hidden");
+
+    function logout() {
+      localStorage.clear();
+      location.href = "login.html";
+    }
+
+    // --- Example transactions for demo ---
+    function getExampleTransactions() {
+      const now = Date.now();
+      return [
+        {
+          type: 'send', asset: 'ZAR', amount: 250, from: user.phone, to: '+27123456789', date: new Date(now - 86400000 * 1).toISOString(), note: 'Groceries', tag: 'food'
+        },
+        {
+          type: 'receive', asset: 'USD', amount: 50, from: '+19876543210', to: user.phone, date: new Date(now - 86400000 * 2).toISOString(), note: 'Gift', tag: 'gift'
+        },
+        {
+          type: 'send', asset: 'BTC', amount: 0.005, from: user.phone, to: '+27778889999', date: new Date(now - 86400000 * 3).toISOString(), note: 'Crypto transfer', tag: 'crypto'
+        },
+        {
+          type: 'receive', asset: 'XLM', amount: 100, from: '+27112223333', to: user.phone, date: new Date(now - 86400000 * 4).toISOString(), note: 'Stellar payment', tag: 'salary'
+        },
+        {
+          type: 'send', asset: 'XRP', amount: 200, from: user.phone, to: '+27665554444', date: new Date(now - 86400000 * 5).toISOString(), note: 'Bill payment', tag: 'bills'
+        }
+      ];
+    }
+
+    // --- End example transactions ---
+
+    let allTransactions = [];
+    let sortDesc = true;
+    let deletedTx = null, deletedIdx = null, undoTimeout = null;
+    // Pagination state
+    let currentPage = 1;
+    let pageSize = 10;
+    let filteredCache = [];
+    function renderHistory(transactions) {
+      const historyDiv = document.getElementById("history");
+      const emptyAnim = document.getElementById("empty-anim");
+      filteredCache = transactions;
+      // Pagination
+      const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = startIdx + pageSize;
+      const pagedTxs = transactions.slice(startIdx, endIdx);
+      document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('prev-page').disabled = currentPage === 1;
+      document.getElementById('next-page').disabled = currentPage === totalPages;
+      if (!transactions.length) {
+        historyDiv.innerHTML = '';
+        document.getElementById("summary").innerHTML = '';
+        document.getElementById("asset-totals").innerHTML = '';
+        emptyAnim.classList.remove('hidden');
+        document.getElementById('page-info').textContent = '';
+        return;
+      } else {
+        emptyAnim.classList.add('hidden');
+      }
+      const assetIcons = { ZAR: '🇿🇦', USD: '🇺🇸', XLM: '⭐', XRP: '🪙', BTC: '₿' };
+      // Summary stats
+      const totalSent = transactions.filter(tx => tx.type === 'send').reduce((sum, tx) => sum + Number(tx.amount), 0);
+      const totalReceived = transactions.filter(tx => tx.type === 'receive').reduce((sum, tx) => sum + Number(tx.amount), 0);
+      document.getElementById("summary").innerHTML = `
+        <div class="flex items-center gap-2 text-softred font-semibold bg-softred/10 border border-softred/30 rounded-xl px-4 py-2"><span>Sent:</span> <span>- ${totalSent}</span></div>
+        <div class="flex items-center gap-2 text-financegreen font-semibold bg-financegreen/10 border border-financegreen/30 rounded-xl px-4 py-2"><span>Received:</span> <span>+ ${totalReceived}</span></div>
+      `;
+      // Per-asset totals
+      const assets = ['ZAR','USD','XLM','XRP','BTC'];
+      document.getElementById("asset-totals").innerHTML = assets.map(asset => {
+        const sent = transactions.filter(tx => tx.asset === asset && tx.type === 'send').reduce((sum, tx) => sum + Number(tx.amount), 0);
+        const received = transactions.filter(tx => tx.asset === asset && tx.type === 'receive').reduce((sum, tx) => sum + Number(tx.amount), 0);
+        if (sent === 0 && received === 0) return '';
+        return `<div class="flex items-center gap-1 px-3 py-1 rounded-2xl border text-xs font-semibold bg-surface/90 shadow border-pewter text-charcoal"><span>${assetIcons[asset]}</span> <span>${asset}</span> <span class="text-softred">- ${sent}</span> <span class="text-financegreen">+ ${received}</span></div>`;
+      }).join('');
+      historyDiv.innerHTML = pagedTxs.map((tx, idx) => {
+        const globalIdx = startIdx + idx;
+        const tag = tx.tag || '';
+        return `
+        <div class="bg-surface/90 border border-pewter rounded-3xl shadow-xl p-5 flex flex-col md:flex-row md:items-center md:justify-between hover:bg-pewter/40 hover:scale-[1.015] focus-within:scale-[1.015] transition group cursor-pointer relative" data-idx="${globalIdx}">
+          <button class="absolute top-2 right-2 text-mutedblue hover:text-softred text-xl delete-btn" title="Delete">&times;</button>
+          <div class="flex items-center gap-4 mb-2 md:mb-0">
+            <span class="text-3xl ${tx.type === 'send' ? 'text-softred' : 'text-financegreen'} drop-shadow">${assetIcons[tx.asset] || '💰'}</span>
+            <div>
+              <div class="font-semibold text-navy text-lg tracking-wide">${tx.asset} ${tx.amount}</div>
+              <div class="text-sm ${tx.type === 'send' ? 'text-softred' : 'text-financegreen'} font-medium">${tx.type === 'send' ? 'Sent to' : 'Received from'}: <span class="font-mono text-mutedblue">${tx.type === 'send' ? tx.to : tx.from}</span></div>
+              <div class="text-xs text-mutedblue">${new Date(tx.date).toLocaleString()}</div>
+              ${tx.note ? `<div class='text-xs text-mutedblue mt-1 italic'>Note: ${tx.note}</div>` : ''}
+              <div class="flex items-center gap-1 mt-1">
+                <span class="text-xs text-mutedblue">Tag:</span>
+                <input type="text" class="tag-input border border-pewter rounded px-2 py-0.5 text-xs bg-pewter/20 text-charcoal" value="${tag}" data-tag-idx="${globalIdx}" placeholder="Add tag..." style="min-width:60px;max-width:120px;" />
+              </div>
+            </div>
+          </div>
+          <div class="mt-2 md:mt-0 ${tx.type === 'send' ? 'text-softred bg-softred/10' : 'text-financegreen bg-financegreen/10'} font-bold text-lg px-4 py-2 rounded-xl shadow-inner border ${tx.type === 'send' ? 'border-softred/30' : 'border-financegreen/30'} group-hover:scale-105 transition-transform">${tx.type === 'send' ? '-' : '+'}${tx.amount}</div>
+        </div>
+        `;
+      }).join('');
+      // Add click event for modal, delete, and tag
+      Array.from(document.querySelectorAll('#history > div[data-idx]')).forEach(div => {
+        div.querySelector('.delete-btn').onclick = function(e) {
+          e.stopPropagation();
+          deletedIdx = Number(div.getAttribute('data-idx'));
+          deletedTx = allTransactions[deletedIdx];
+          allTransactions.splice(deletedIdx, 1);
+          renderHistory(allTransactions);
+          showUndoBar();
+        };
+        div.onclick = function(e) {
+          if (e.target.classList.contains('delete-btn') || e.target.classList.contains('tag-input')) return;
+          const tx = allTransactions[Number(this.getAttribute('data-idx'))];
+          showTxModal(tx);
+        };
+      });
+      // Tag input events
+      Array.from(document.querySelectorAll('.tag-input')).forEach(input => {
+        input.onchange = function(e) {
+          const idx = Number(this.getAttribute('data-tag-idx'));
+          allTransactions[idx].tag = this.value;
+          localStorage.setItem('easypay-tags', JSON.stringify(allTransactions.map(tx => tx.tag || '')));
+        };
+      });
+    }
+    // Pagination controls
+    document.getElementById('page-size').onchange = function() {
+      pageSize = Number(this.value);
+      currentPage = 1;
+      renderHistory(filteredCache);
+    };
+    document.getElementById('prev-page').onclick = function() {
+      if (currentPage > 1) { currentPage--; renderHistory(filteredCache); }
+    };
+    document.getElementById('next-page').onclick = function() {
+      const totalPages = Math.max(1, Math.ceil(filteredCache.length / pageSize));
+      if (currentPage < totalPages) { currentPage++; renderHistory(filteredCache); }
+    };
+    // Dark mode toggle
+    document.getElementById('dark-toggle').onclick = function() {
+      document.body.classList.toggle('dark');
+      if (document.body.classList.contains('dark')) {
+        this.textContent = '☀️ Light';
+        document.body.classList.add('bg-gray-900','text-gray-100');
+        document.body.classList.remove('bg-gradient-to-br','from-blue-100','to-green-100','text-gray-800');
+      } else {
+        this.textContent = '🌙 Dark';
+        document.body.classList.remove('bg-gray-900','text-gray-100');
+        document.body.classList.add('bg-gradient-to-br','from-blue-100','to-green-100','text-gray-800');
+      }
+    };
+    // Undo delete
+    function showUndoBar() {
+      const bar = document.getElementById('undo-bar');
+      bar.classList.remove('hidden');
+      clearTimeout(undoTimeout);
+      undoTimeout = setTimeout(() => { bar.classList.add('hidden'); deletedTx = null; deletedIdx = null; }, 5000);
+    }
+    document.getElementById('undo-btn').onclick = function() {
+      if (deletedTx !== null && deletedIdx !== null) {
+        allTransactions.splice(deletedIdx, 0, deletedTx);
+        renderHistory(allTransactions);
+        deletedTx = null; deletedIdx = null;
+        document.getElementById('undo-bar').classList.add('hidden');
+      }
+    };
+    // Export to CSV
+
+
+    // Transaction details modal
+    function showTxModal(tx) {
+      const assetIcons = { ZAR: '🇿🇦', USD: '🇺🇸', XLM: '⭐', XRP: '🪙', BTC: '₿' };
+      document.getElementById('modal-content').innerHTML = `
+        <div class="flex flex-col items-center gap-2 mb-4">
+          <span class="text-4xl ${tx.type === 'send' ? 'text-red-400' : 'text-green-500'} drop-shadow">${assetIcons[tx.asset] || '💰'}</span>
+          <div class="font-bold text-xl text-blue-800">${tx.asset} ${tx.amount}</div>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div><span class="font-semibold">Type:</span> ${tx.type === 'send' ? 'Sent' : 'Received'}</div>
+          <div><span class="font-semibold">From:</span> <span class="font-mono">${tx.from || '-'}</span></div>
+          <div><span class="font-semibold">To:</span> <span class="font-mono">${tx.to || '-'}</span></div>
+          <div><span class="font-semibold">Date:</span> ${new Date(tx.date).toLocaleString()}</div>
+          ${tx.note ? `<div><span class='font-semibold'>Note:</span> <span class='italic'>${tx.note}</span></div>` : ''}
+        </div>
+        <button id="copy-tx" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow">Copy Details</button>
+      `;
+      document.getElementById('tx-modal').classList.remove('hidden');
+      document.getElementById('copy-tx').onclick = function() {
+        const details = `Type: ${tx.type}\nAsset: ${tx.asset}\nAmount: ${tx.amount}\nFrom: ${tx.from || '-'}\nTo: ${tx.to || '-'}\nDate: ${new Date(tx.date).toLocaleString()}${tx.note ? `\nNote: ${tx.note}` : ''}`;
+        navigator.clipboard.writeText(details);
+        this.textContent = 'Copied!';
+        setTimeout(()=>{this.textContent='Copy Details';},1200);
+      };
+    }
+    document.getElementById('close-modal').onclick = function() {
+      document.getElementById('tx-modal').classList.add('hidden');
+    };
+    document.getElementById('tx-modal').onclick = function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    };
+
+    function filterAndRender() {
+      let filtered = allTransactions.slice();
+      const asset = document.getElementById('filter-asset').value;
+      const type = document.getElementById('filter-type').value;
+      const search = document.getElementById('search').value.trim().toLowerCase();
+      if (asset) filtered = filtered.filter(tx => tx.asset === asset);
+      if (type) filtered = filtered.filter(tx => tx.type === type);
+      if (search) filtered = filtered.filter(tx => (tx.to && tx.to.toLowerCase().includes(search)) || (tx.from && tx.from.toLowerCase().includes(search)) || (tx.asset && tx.asset.toLowerCase().includes(search)));
+      filtered.sort((a, b) => sortDesc ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
+      renderHistory(filtered);
+    }
+
+
+    // Try to fetch, but if no data, use examples
+    fetch(`${api}/history/${user.phone}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error || !data.transactions || !Array.isArray(data.transactions) || data.transactions.length === 0) {
+          // Use example data if none exists
+          allTransactions = getExampleTransactions();
+        } else {
+          allTransactions = data.transactions;
+        }
+        filterAndRender();
+      })
+      .catch(() => {
+        allTransactions = getExampleTransactions();
+        filterAndRender();
+      });
+
+    document.getElementById('filter-asset').addEventListener('change', filterAndRender);
+    document.getElementById('filter-type').addEventListener('change', filterAndRender);
+    document.getElementById('search').addEventListener('input', filterAndRender);
+    document.getElementById('sort-btn').addEventListener('click', function() {
+      sortDesc = !sortDesc;
+      this.textContent = sortDesc ? 'Sort: Newest' : 'Sort: Oldest';
+      filterAndRender();
+    });
+  </script>
+</body>
+</html>
+
+

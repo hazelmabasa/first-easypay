@@ -1,0 +1,55 @@
+<!-- EasyPay Home -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EasyPay - Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-100 to-blue-100 min-h-screen flex flex-col">
+  <header class="bg-white shadow">
+    <nav class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="w-10 h-10 flex items-center justify-center rounded-full shadow border-2 border-blue-400 bg-gradient-to-br from-blue-500 to-green-400 text-white text-2xl font-black select-none" style="font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: -2px;">EP</span>
+        <span class="text-2xl font-extrabold text-blue-700 tracking-tight">EasyPay</span>
+      </div>
+      <div class="space-x-4">
+        <a href="login.html" class="text-gray-600 hover:text-blue-700">Login</a>
+        <a href="register.html" class="text-gray-600 hover:text-blue-700">Register</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="flex-1 flex flex-col items-center justify-center text-center px-4">
+    <h1 class="text-4xl font-extrabold text-blue-700 mb-2 tracking-tight">Welcome to EasyPay</h1>
+    <div class="text-green-600 font-semibold text-lg mb-2">Your Money, Your Way.</div>
+    <p class="text-lg text-gray-700 mb-8 max-w-xl">A simple, secure, and fast way to manage your digital and fiat assets. Send, receive, and track your balances with ease.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+      <a href="register.html" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-3 rounded-lg font-semibold shadow transition">Get Started</a>
+      <a href="login.html" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold shadow transition">Login</a>
+    </div>
+    <div class="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+        <svg class="w-8 h-8 text-green-500 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 8v8m8-8a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>
+        <div class="font-bold text-blue-700">Multi-Asset</div>
+        <div class="text-xs text-gray-500">Manage ZAR, USD, BTC, XRP, XLM</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+        <svg class="w-8 h-8 text-blue-500 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2z"/></svg>
+        <div class="font-bold text-blue-700">Secure</div>
+        <div class="text-xs text-gray-500">Your data is protected and private</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+        <svg class="w-8 h-8 text-green-400 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 17l4 4 4-4m0-5V3a1 1 0 00-1-1H7a1 1 0 00-1 1v9m12 4h-4m0 0v4m0-4H8"/></svg>
+        <div class="font-bold text-blue-700">Instant Transfers</div>
+        <div class="text-xs text-gray-500">Send & receive in seconds</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center text-xs text-gray-500 py-4">
+    <span class="font-bold text-blue-700">EasyPay</span> &copy; 2025. All rights reserved.
+  </footer>
+</body>
+</html>

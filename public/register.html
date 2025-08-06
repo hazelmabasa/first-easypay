@@ -1,0 +1,132 @@
+<!-- EasyPay Register -->
+<!-- Form to create new user -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-100 to-blue-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+    <h2 class="text-2xl font-semibold text-center text-blue-700 mb-6">Create Your EasyPay Account</h2>
+
+    <div class="space-y-4">
+      <input id="phone" type="text" placeholder="Phone Number"
+        class="w-full p-3 border rounded text-base focus:ring-2 focus:ring-blue-300 mb-2" maxlength="15" autocomplete="tel" autofocus />
+
+      <input id="email" type="email" placeholder="Email Address"
+        class="w-full p-3 border rounded text-base focus:ring-2 focus:ring-blue-300 mb-4" autocomplete="email" />
+
+      <button id="register-btn" onclick="register()"
+        class="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white p-3 rounded font-semibold flex items-center justify-center gap-2 text-lg transition shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <span id="register-btn-text">Register</span>
+        <svg id="register-loading" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+      </button>
+    </div>
+
+    <div id="message" class="text-sm text-center mt-4"></div>
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full text-center">
+        <h3 class="text-xl font-bold text-blue-700 mb-2">Welcome to EasyPay!</h3>
+        <p class="mb-4">Your account has been created and you are now logged in.<br>Let's get started!</p>
+        <div class="mb-2 text-sm text-gray-500">Redirecting to your wallet...</div>
+        <button onclick="closeModal()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Go now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Allow Enter key to submit registration
+    document.addEventListener('DOMContentLoaded', function() {
+      const phone = document.getElementById('phone');
+      const email = document.getElementById('email');
+      phone.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') email.focus();
+      });
+      email.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('register-btn').click();
+      });
+    });
+    const api = 'http://localhost:3000';
+
+    function showLoading(loading) {
+      document.getElementById('register-btn').disabled = loading;
+      document.getElementById('register-loading').classList.toggle('hidden', !loading);
+      document.getElementById('register-btn-text').textContent = loading ? 'Registering...' : 'Register';
+    }
+
+    function validateEmail(email) {
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    }
+
+    function validatePhone(phone) {
+      return /^\+?\d{7,15}$/.test(phone);
+    }
+
+    function register() {
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const msg = document.getElementById("message");
+      msg.textContent = '';
+
+      if (!validatePhone(phone)) {
+        msg.textContent = "⚠️ Please enter a valid phone number (digits, may start with +).";
+        msg.className = "text-red-500 text-sm text-center mt-4";
+        return;
+      }
+      if (!validateEmail(email)) {
+        msg.textContent = "⚠️ Please enter a valid email address.";
+        msg.className = "text-red-500 text-sm text-center mt-4";
+        return;
+      }
+
+      showLoading(true);
+      fetch(api + '/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          // Auto-login after registration
+          fetch(api + '/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, email })
+          })
+          .then(res => res.json())
+          .then(loginData => {
+            showLoading(false);
+            if (loginData.success && loginData.user) {
+              localStorage.setItem("easypay-user", JSON.stringify(loginData.user));
+              window.location.href = "wallet.html";
+            } else {
+              msg.textContent = "✅ Registered, but login failed. Please try logging in.";
+              msg.className = "text-yellow-600 text-sm text-center mt-4";
+            }
+          });
+        } else if (data.error) {
+          showLoading(false);
+          msg.textContent = "⚠️ " + data.error;
+          msg.className = "text-red-500 text-sm text-center mt-4";
+        }
+      })
+      .catch(() => {
+        showLoading(false);
+        msg.textContent = "⚠️ Registration failed. Try again.";
+        msg.className = "text-red-500 text-sm text-center mt-4";
+      });
+    }
+
+    function closeModal() {
+      window.location.href = "wallet.html";
+    }
+  </script>
+</body>
+</html>
+
+

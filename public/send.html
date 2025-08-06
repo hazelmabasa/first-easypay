@@ -1,0 +1,155 @@
+<!-- EasyPay Send -->
+<!-- Form to send fiat/XRP/XLM -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Send - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#1A2E46',
+            financegreen: '#2ECC71',
+            softteal: '#00BFA6',
+            pewter: '#C3CCD0',
+            surface: '#FFFFFF',
+            charcoal: '#2D2D2D',
+            mutedblue: '#5D6D7E',
+            softred: '#E74C3C',
+            amber: '#F39C12',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-pewter min-h-screen text-charcoal">
+  <header class="bg-navy shadow">
+    <nav class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="w-10 h-10 flex items-center justify-center rounded-full shadow border-2 border-softteal bg-gradient-to-br from-financegreen to-softteal text-white text-2xl font-black select-none" style="font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: -2px;">EP</span>
+        <span class="text-xl font-bold text-financegreen">EasyPay</span>
+      </div>
+      <div class="space-x-4">
+        <a href="wallet.html" class="text-mutedblue hover:text-financegreen">Wallet</a>
+        <a href="history.html" class="text-mutedblue hover:text-financegreen">History</a>
+        <a href="send.html" class="text-financegreen font-semibold">Send</a>
+        <a href="receive.html" class="text-mutedblue hover:text-financegreen">Receive</a>
+        <a href="login.html" id="login-link" class="text-mutedblue hover:text-financegreen">Login</a>
+        <a href="#" id="logout-link" class="text-mutedblue hover:text-softred hidden" onclick="logout()">Logout</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-md mx-auto mt-10 p-1 rounded-[2rem] bg-pewter/80 shadow-2xl hover:scale-[1.015] transition-transform duration-300 backdrop-blur-md group">
+    <div class="rounded-[1.7rem] bg-surface p-6 space-y-8">
+    <div class="flex flex-col items-center gap-2 mb-2">
+      <span class="w-16 h-16 flex items-center justify-center rounded-full shadow border-2 border-softteal bg-gradient-to-br from-financegreen to-softteal text-white text-3xl font-black select-none mb-1" style="font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: -2px;">EP</span>
+      <h2 class="text-2xl font-extrabold text-center text-navy drop-shadow">Send Funds</h2>
+      <div class="text-mutedblue text-sm">Transfer assets instantly</div>
+    </div>
+    <form id="sendForm" class="space-y-5 bg-pewter/40 rounded-3xl shadow-2xl p-7 border border-navy/20">
+      <div>
+        <label class="block font-medium mb-1 text-navy tracking-wide">Recipient Phone</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-softteal text-lg">📱</span>
+          <input type="text" id="recipient" required class="w-full p-2.5 pl-10 border border-softteal rounded-xl focus:ring-2 focus:ring-softteal focus:border-softteal transition placeholder:text-mutedblue bg-surface text-charcoal shadow-sm" maxlength="15" autocomplete="tel" placeholder="e.g. +27123456789" />
+        </div>
+      </div>
+      <div>
+        <label class="block font-medium mb-1 text-navy tracking-wide">Asset</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-softteal text-lg" id="asset-icon">💰</span>
+          <select id="asset" class="w-full p-2.5 pl-10 border border-softteal rounded-xl focus:ring-2 focus:ring-softteal focus:border-softteal transition bg-surface text-charcoal shadow-sm">
+            <option value="ZAR">ZAR</option>
+            <option value="USD">USD</option>
+            <option value="XLM">XLM</option>
+            <option value="XRP">XRP</option>
+            <option value="BTC">BTC</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block font-medium mb-1 text-navy tracking-wide">Amount</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-financegreen text-lg">💸</span>
+          <input type="number" id="amount" step="0.01" min="0.01" required class="w-full p-2.5 pl-10 border border-softteal rounded-xl focus:ring-2 focus:ring-softteal focus:border-softteal transition placeholder:text-mutedblue bg-surface text-charcoal shadow-sm" placeholder="Enter amount" />
+        </div>
+      </div>
+      <button type="submit" class="w-full bg-gradient-to-r from-financegreen to-softteal hover:from-softteal hover:to-financegreen text-white p-2.5 rounded-xl font-semibold shadow-lg focus:outline-none focus:ring-2 focus:ring-softteal transition text-lg tracking-wide">Send</button>
+    </form>
+    <div id="message" class="text-center text-sm mt-2"></div>
+    </div>
+  </main>
+
+  <script>
+    const api = 'http://localhost:3000';
+    const user = JSON.parse(localStorage.getItem("easypay-user"));
+    if (!user) location.href = "login.html";
+
+    document.getElementById("logout-link").classList.remove("hidden");
+    document.getElementById("login-link").classList.add("hidden");
+
+    function logout() {
+      localStorage.clear();
+      location.href = "login.html";
+    }
+
+    document.getElementById("sendForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const to = document.getElementById("recipient").value.trim();
+      const asset = document.getElementById("asset").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const message = document.getElementById("message");
+      message.textContent = "";
+      message.className = "text-center text-sm mt-2";
+      // Validate recipient phone
+      if (!/^\+?\d{7,15}$/.test(to)) {
+        message.textContent = "Enter a valid recipient phone number.";
+        message.className = "text-red-500 text-center text-sm mt-2";
+        return;
+      }
+      if (isNaN(amount) || amount <= 0) {
+        message.textContent = "Enter a valid amount.";
+        message.className = "text-red-500 text-center text-sm mt-2";
+        return;
+      }
+      fetch(`${api}/send-asset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senderPhone: user.phone, recipientPhone: to, asset, amount })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) {
+            message.textContent = data.error;
+            message.className = "text-red-600 text-center text-sm mt-2";
+          } else {
+            message.textContent = `✅ Sent ${amount} ${asset} to ${to}!`;
+            message.className = "text-green-600 text-center text-sm mt-2";
+            document.getElementById("sendForm").reset();
+          }
+        })
+        .catch(() => {
+          message.textContent = "Send failed. Please try again.";
+          message.className = "text-red-600 text-center text-sm mt-2";
+        });
+    });
+
+    // Asset icon mapping
+    const assetIcons = { ZAR: '🇿🇦', USD: '🇺🇸', XLM: '⭐', XRP: '🪙', BTC: '₿' };
+    const assetSelect = document.getElementById("asset");
+    const assetIcon = document.getElementById("asset-icon");
+    function updateAssetIcon() {
+      assetIcon.textContent = assetIcons[assetSelect.value] || '💰';
+    }
+    assetSelect.addEventListener('change', updateAssetIcon);
+    updateAssetIcon();
+  </script>
+</body>
+</html>
+

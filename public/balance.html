@@ -1,0 +1,186 @@
+<!-- EasyPay Balance -->
+<!-- Shows fiat/XRP/XLM separately -->
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balance - EasyPay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-100 to-blue-100 min-h-screen text-gray-800">
+  <header class="bg-white shadow">
+    <nav class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="text-xl font-bold text-blue-700">EasyPay</div>
+      <div class="space-x-4">
+        <a href="index.html" class="text-gray-600 hover:text-blue-700">Home</a>
+        <a href="wallet.html" class="text-gray-600 hover:text-blue-700">Wallet</a>
+        <a href="send.html" class="text-gray-600 hover:text-blue-700">Send</a>
+        <a href="balance.html" class="text-blue-700 font-semibold">Balance</a>
+        <a href="login.html" id="login-link" class="text-gray-600 hover:text-blue-700">Login</a>
+        <a href="#" id="logout-link" class="text-gray-600 hover:text-red-600 hidden" onclick="logout()">Logout</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow space-y-6">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-2xl font-semibold text-center">Balance Details</h2>
+      <button id="refresh-btn" class="ml-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-700 text-sm">Refresh</button>
+    </div>
+
+    <div id="summary" class="mb-4 p-4 rounded-lg bg-gradient-to-r from-blue-200 to-green-200 shadow text-center">
+      <div class="text-lg font-bold">Total Balance (ZAR + Crypto)</div>
+      <div id="total" class="text-2xl text-blue-700 font-extrabold">--</div>
+      <div id="last-updated" class="text-xs text-gray-500 mt-1">Last updated: --</div>
+    </div>
+
+    <ul id="balances" class="space-y-3 text-lg">
+      <li class="bg-blue-100 p-3 rounded shadow flex justify-between items-center">
+        <span>Fiat (ZAR)</span>
+        <div class="flex flex-col items-end">
+          <strong id="fiat">--</strong>
+          <span class="text-xs text-gray-500" id="fiat-zar">ZAR --</span>
+        </div>
+      </li>
+      <li class="bg-green-100 p-3 rounded shadow flex justify-between items-center">
+        <span>XRP</span>
+        <div class="flex flex-col items-end">
+          <strong id="xrp">--</strong>
+          <span class="text-xs text-gray-500" id="xrp-zar">ZAR --</span>
+        </div>
+      </li>
+      <li class="bg-yellow-100 p-3 rounded shadow flex justify-between items-center">
+        <span>XLM</span>
+        <div class="flex flex-col items-end">
+          <strong id="xlm">--</strong>
+          <span class="text-xs text-gray-500" id="xlm-zar">ZAR --</span>
+        </div>
+      </li>
+      <li class="bg-orange-100 p-3 rounded shadow flex justify-between items-center">
+        <span>USD</span>
+        <div class="flex flex-col items-end">
+          <strong id="usd">--</strong>
+          <span class="text-xs text-gray-500" id="usd-zar">ZAR --</span>
+        </div>
+      </li>
+      <li class="bg-gray-100 p-3 rounded shadow flex justify-between items-center">
+        <span>BTC</span>
+        <div class="flex flex-col items-end">
+          <strong id="btc">--</strong>
+          <span class="text-xs text-gray-500" id="btc-zar">ZAR --</span>
+        </div>
+      </li>
+    </ul>
+    <div id="rates" class="mt-6 p-3 bg-white rounded shadow text-xs text-gray-700"></div>
+    <div id="balance-message" class="text-center text-sm mt-4"></div>
+  </main>
+
+  <script>
+    const api = 'http://localhost:3000';
+    const user = JSON.parse(localStorage.getItem("easypay-user"));
+    if (!user) location.href = "login.html";
+
+    document.getElementById("logout-link").classList.remove("hidden");
+    document.getElementById("login-link").classList.add("hidden");
+
+    function logout() {
+      localStorage.removeItem("easypay-user");
+      location.href = "login.html";
+    }
+
+    const balanceMessage = document.getElementById("balance-message");
+    const totalDiv = document.getElementById("total");
+    let rates = null;
+    let lastUpdated = null;
+
+    function setLoading() {
+      document.getElementById("fiat").textContent = '--';
+      document.getElementById("xrp").textContent = '--';
+      document.getElementById("xlm").textContent = '--';
+      document.getElementById("usd").textContent = '--';
+      document.getElementById("btc").textContent = '--';
+      totalDiv.textContent = '--';
+      balanceMessage.textContent = 'Loading balances...';
+      balanceMessage.className = 'text-center text-gray-500 mt-4';
+    }
+    function setError(msg) {
+      balanceMessage.textContent = msg;
+      balanceMessage.className = 'text-center text-red-600 mt-4';
+    }
+    function setBalances(data) {
+      document.getElementById("fiat").textContent = data.balance?.toFixed(2) ?? '--';
+      document.getElementById("xrp").textContent = data.xrp?.toFixed(2) ?? '--';
+      document.getElementById("xlm").textContent = data.xlm?.toFixed(2) ?? '--';
+      document.getElementById("usd").textContent = data.usd?.toFixed(2) ?? '--';
+      document.getElementById("btc").textContent = data.btc?.toFixed(6) ?? '--';
+      if (!rates) {
+        totalDiv.textContent = '--';
+        balanceMessage.textContent = 'Loading exchange rates...';
+        balanceMessage.className = 'text-center text-gray-500 mt-4';
+        return;
+      }
+      // Show ZAR value for each asset
+      document.getElementById("fiat-zar").textContent = `ZAR ${(data.balance || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+      document.getElementById("usd-zar").textContent = `ZAR ${((data.usd || 0) * rates.USDZAR).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+      document.getElementById("xrp-zar").textContent = `ZAR ${((data.xrp || 0) * rates.XRPZAR).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+      document.getElementById("xlm-zar").textContent = `ZAR ${((data.xlm || 0) * rates.XLMZAR).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+      document.getElementById("btc-zar").textContent = `ZAR ${((data.btc || 0) * rates.BTCZAR).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+      // Use real rates for conversion
+      const total = (data.balance || 0)
+        + (data.usd || 0) * rates.USDZAR
+        + (data.xrp || 0) * rates.XRPZAR
+        + (data.xlm || 0) * rates.XLMZAR
+        + (data.btc || 0) * rates.BTCZAR;
+      totalDiv.textContent = isNaN(total) ? '--' : total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+      balanceMessage.textContent = '';
+      // Show last updated
+      lastUpdated = new Date();
+      document.getElementById("last-updated").textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
+      // Show rates
+      document.getElementById("rates").innerHTML = `
+        <div class="mb-1 font-semibold">Exchange Rates (to ZAR):</div>
+        <div>USD: <span class="font-mono">${rates.USDZAR}</span></div>
+        <div>BTC: <span class="font-mono">${rates.BTCZAR}</span></div>
+        <div>XRP: <span class="font-mono">${rates.XRPZAR}</span></div>
+        <div>XLM: <span class="font-mono">${rates.XLMZAR}</span></div>
+      `;
+    }
+
+    function fetchRates() {
+      return Promise.all([
+        fetch('https://api.exchangerate.host/latest?base=USD&symbols=ZAR').then(r => r.json()),
+        fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ripple,stellar&vs_currencies=zar').then(r => r.json())
+      ]).then(([usd, crypto]) => {
+        return {
+          USDZAR: usd.rates.ZAR,
+          BTCZAR: crypto.bitcoin.zar,
+          XRPZAR: crypto.ripple.zar,
+          XLMZAR: crypto.stellar.zar
+        };
+      });
+    }
+
+    function loadBalancesAndRates() {
+      setLoading();
+      Promise.all([
+        fetch(api + '/balance/' + user.phone).then(r => r.json()),
+        fetchRates()
+      ]).then(([data, fetchedRates]) => {
+        rates = fetchedRates;
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setBalances(data);
+        }
+      }).catch(() => setError('Failed to load balances or rates. Please try again.'));
+    }
+
+    loadBalancesAndRates();
+
+    document.getElementById("refresh-btn").addEventListener("click", function() {
+      loadBalancesAndRates();
+    });
+  </script>
+</body>
+</html>
